@@ -1,0 +1,2 @@
+SECRET_KEY = "8percent"
+ALGORITHM = "HS256"
