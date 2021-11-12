@@ -1,8 +1,10 @@
 import pytest
 
+from src.security.application.services import AuthenticationService
 from src.users.application import unit_of_work
 from src.users.application.services import UserService
 from src.users.domain import models
+from src.users.exceptions import UserNotFoundException
 from src.users.infra import repository
 from src.utils.id_generator import IdGenerator
 
@@ -12,7 +14,7 @@ class FakeUserRepository(repository.AbstractUserRepository):
         self._users = users
 
     def exists(self, name: str) -> bool:
-        if self._users.get(name, None):
+        if self._users.get_by_id(name, None):
             return True
         else:
             return False
@@ -20,8 +22,14 @@ class FakeUserRepository(repository.AbstractUserRepository):
     def add(self, user: models.User):
         self._users[user.user_id] = user
 
-    def get(self, user_id: str) -> models.User:
+    def get_by_id(self, user_id: str) -> models.User:
         return self._users[user_id]
+
+    def get_by_name(self, name: str) -> models.User:
+        for key, value in self._users.items():
+            if value.name == name:
+                return self._users[key]
+        raise UserNotFoundException("user not found")
 
 
 class FakeUserUnitOfWork(unit_of_work.AbstractUserUnitOfWork):
@@ -49,3 +57,8 @@ class FakeUserIdGenerator(IdGenerator):
 @pytest.fixture
 def user_service():
     return UserService(FakeUserIdGenerator(), FakeUserUnitOfWork())
+
+
+@pytest.fixture
+def authentication_service():
+    return AuthenticationService(FakeUserUnitOfWork())
