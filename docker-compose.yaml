@@ -4,7 +4,5 @@ services:
   backend:
     build: .
     ports:
-      - "8000:8000"
-#    command:
-#      - ["dockerize","-wait", "tcp://]
+      - "8080:8000"
     entrypoint: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
