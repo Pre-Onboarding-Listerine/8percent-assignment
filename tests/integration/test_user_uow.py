@@ -21,14 +21,14 @@ def test_retrieve_user_with_user_id(session_factory):
 
     uow = SqlUserUnitOfWork(session_factory)
     with uow:
-        actual = uow.users.get(user_id="user-1")
+        actual = uow.users.get_by_id(user_id="user-1")
         assert_that(actual).is_equal_to(user)
 
 
 def test_retrieve_user_with_not_exist_user(session_factory):
     uow = SqlUserUnitOfWork(session_factory)
     with uow:
-        assert_that(uow.users.get).raises(UserNotFoundException).when_called_with(user_id="user-1")
+        assert_that(uow.users.get_by_id).raises(UserNotFoundException).when_called_with(user_id="user-1")
 
 
 def test_add_user_with_valid_user(session_factory):
@@ -37,7 +37,7 @@ def test_add_user_with_valid_user(session_factory):
 
     with uow:
         uow.users.add(user)
-        actual = uow.users.get(user.user_id)
+        actual = uow.users.get_by_id(user.user_id)
         assert_that(actual).is_equal_to(user)
 
 

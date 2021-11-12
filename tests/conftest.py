@@ -8,7 +8,6 @@ from src.users.infra.orm import User
 
 pytest_plugins = [
     "tests.unit.fixtures.services",
-    "tests.unit.fixtures.client",
 ]
 
 TEST_SQLITE_URL = "sqlite:///:memory:"

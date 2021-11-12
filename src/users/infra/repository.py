@@ -15,7 +15,11 @@ class AbstractUserRepository(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get(self, user_id: str) -> models.User:
+    def get_by_id(self, user_id: str) -> models.User:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_by_name(self, name: str) -> models.User:
         raise NotImplementedError
 
 
@@ -33,8 +37,14 @@ class SqlUserRepository(AbstractUserRepository):
         user_orm = orm.User(**user.dict())
         self.session.add(user_orm)
 
-    def get(self, user_id: str) -> models.User:
+    def get_by_id(self, user_id: str) -> models.User:
         user_orm = self.session.query(orm.User).filter(orm.User.user_id == user_id).first()
         if not user_orm:
             raise UserNotFoundException(f"{user_id} is not found")
+        return models.User.from_orm(user_orm)
+
+    def get_by_name(self, name: str) -> models.User:
+        user_orm = self.session.query(orm.User).filter(orm.User.name == name).first()
+        if not user_orm:
+            raise UserNotFoundException(f"{name} is not found")
         return models.User.from_orm(user_orm)

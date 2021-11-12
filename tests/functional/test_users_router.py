@@ -24,7 +24,6 @@ class TestUserRouter(unittest.TestCase):
 
     def tearDown(self) -> None:
         Base.metadata.drop_all(bind=self.engine)
-        print("teardown")
 
     def test_signup_with_valid_info(self):
         data = {
