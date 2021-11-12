@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 
+from src.accounts.exception_handlers import lack_of_balance_exception_handler, account_not_found_exception_handler, \
+    duplicated_account_exception_handler
+from src.accounts.exceptions import LackOfBalanceException, AccountNotFoundException, DuplicatedAccountException
 from src.security.exception import EmptyPropertyException, IncorrectPasswordException, EmptyAccessTokenException, \
     InvalidAccessTokenException
 from src.security.exception_handlers import empty_property_exception_handler, incorrect_password_exception_handler, \
@@ -9,6 +12,7 @@ from src.users.exception_handlers import empty_name_exception_handler, user_not_
 from src.users.exceptions import EmptyNameException, UserNotFoundException, DuplicatedUserException
 from src.users.routers import router as user_router
 from src.security.routers import router as security_router
+from src.accounts.routers import router as account_router
 from src.configs.database import Base, engine
 
 Base.metadata.create_all(bind=engine)
@@ -16,6 +20,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI()
 app.include_router(user_router)
 app.include_router(security_router)
+app.include_router(account_router)
 
 
 app.add_exception_handler(EmptyNameException, empty_name_exception_handler)
@@ -25,3 +30,6 @@ app.add_exception_handler(EmptyPropertyException, empty_property_exception_handl
 app.add_exception_handler(IncorrectPasswordException, incorrect_password_exception_handler)
 app.add_exception_handler(EmptyAccessTokenException, empty_access_token_exception_handler)
 app.add_exception_handler(InvalidAccessTokenException, invalid_access_token_exception_handler)
+app.add_exception_handler(LackOfBalanceException, lack_of_balance_exception_handler)
+app.add_exception_handler(AccountNotFoundException, account_not_found_exception_handler)
+app.add_exception_handler(DuplicatedAccountException, duplicated_account_exception_handler)

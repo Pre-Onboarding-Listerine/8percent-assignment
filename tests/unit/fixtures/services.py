@@ -1,38 +1,45 @@
+from typing import List
+
 import pytest
 
+from src.accounts.application.services import AccountService
+from src.accounts.application.unit_of_work import AbstractAccountUnitOfWork
+from src.accounts.domain.models import Account
+from src.accounts.exceptions import AccountNotFoundException
+from src.accounts.infra.repository import AbstractAccountRepository
 from src.security.application.services import AuthenticationService
-from src.users.application import unit_of_work
+from src.users.application.unit_of_work import AbstractUserUnitOfWork
 from src.users.application.services import UserService
-from src.users.domain import models
+from src.users.domain.models import User
 from src.users.exceptions import UserNotFoundException
-from src.users.infra import repository
+from src.users.infra.repository import AbstractUserRepository
 from src.utils.id_generator import IdGenerator
 
 
-class FakeUserRepository(repository.AbstractUserRepository):
+class FakeUserRepository(AbstractUserRepository):
     def __init__(self, users):
         self._users = users
 
     def exists(self, name: str) -> bool:
-        if self._users.get_by_id(name, None):
+        if self._users.get_by_name(name, None):
             return True
         else:
             return False
 
-    def add(self, user: models.User):
+    def add(self, user: User):
         self._users[user.user_id] = user
 
-    def get_by_id(self, user_id: str) -> models.User:
+    def get_by_id(self, user_id: str) -> User:
         return self._users[user_id]
 
-    def get_by_name(self, name: str) -> models.User:
+    def get_by_name(self, name: str) -> User:
         for key, value in self._users.items():
             if value.name == name:
                 return self._users[key]
         raise UserNotFoundException("user not found")
 
 
-class FakeUserUnitOfWork(unit_of_work.AbstractUserUnitOfWork):
+class FakeUserUnitOfWork(AbstractUserUnitOfWork):
     def __init__(self):
         self.users = FakeUserRepository(dict())
         self.committed = False
@@ -62,3 +69,56 @@ def user_service():
 @pytest.fixture
 def authentication_service():
     return AuthenticationService(FakeUserUnitOfWork())
+
+
+class FakeAccountRepository(AbstractAccountRepository):
+    def __init__(self, accounts):
+        self._accounts = accounts
+
+    def exists(self, account_number: str):
+        if self._accounts.get_by_account_number(account_number):
+            return True
+        else:
+            return False
+
+    def get_by_account_number(self, account_number: str) -> Account:
+        try:
+            return self._accounts[account_number]
+        except KeyError:
+            raise AccountNotFoundException("account not found")
+
+    def add(self, account: Account):
+        self._accounts[account.account_number] = account
+
+    def list(self, owner_id: str) -> List[Account]:
+        return list(filter(lambda account: account.owner_id == owner_id, self._accounts.values()))
+
+    def update(self, account: Account):
+        pass
+
+
+class FakeAccountUnitOfWork(AbstractAccountUnitOfWork):
+    def __init__(self):
+        self.accounts = FakeAccountRepository(dict())
+        self.committed = False
+
+    def commit(self):
+        self.committed = True
+
+    def rollback(self):
+        pass
+
+
+class FakeAccountNumberGenerator(IdGenerator):
+    def __init__(self):
+        self.index = 0
+
+    def generate(self) -> str:
+        new_account_number = str(self.index)
+        self.index += 1
+        return new_account_number
+
+
+@pytest.fixture
+def account_service():
+    return AccountService(FakeAccountNumberGenerator(), FakeAccountUnitOfWork())

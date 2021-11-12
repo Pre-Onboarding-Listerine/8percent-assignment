@@ -54,14 +54,12 @@ class TestUserRouter(unittest.TestCase):
             "name": "asd",
             "password": "123qwe"
         }
-        print("response")
         response = self.client.post(
             "/api/users",
             json=data
         )
         assert_that(response.status_code).is_equal_to(status.HTTP_201_CREATED)
 
-        print("duplicated")
         response_duplicated = self.client.post(
             "/api/users",
             json=data
