@@ -50,3 +50,20 @@ def test_add_with_duplicated_user(session_factory):
     uow = SqlUserUnitOfWork(session_factory)
     with uow:
         assert_that(uow.users.add).raises(DuplicatedUserException).when_called_with(user)
+
+
+def test_check_exists_with_exist_user(session_factory):
+    user = models.User(user_id="user-1", name="asd", password="123qwe")
+    session = session_factory()
+    insert_user(session, user)
+    session.commit()
+
+    uow = SqlUserUnitOfWork(session_factory)
+    with uow:
+        assert_that(uow.users.exists(user.name)).is_equal_to(True)
+
+
+def test_check_exists_with_not_exist_user(session_factory):
+    uow = SqlUserUnitOfWork(session_factory)
+    with uow:
+        assert_that(uow.users.exists("asd")).is_equal_to(False)

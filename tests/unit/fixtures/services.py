@@ -11,6 +11,12 @@ class FakeUserRepository(repository.AbstractUserRepository):
     def __init__(self, users):
         self._users = users
 
+    def exists(self, name: str) -> bool:
+        if self._users.get(name, None):
+            return True
+        else:
+            return False
+
     def add(self, user: models.User):
         self._users[user.user_id] = user
 

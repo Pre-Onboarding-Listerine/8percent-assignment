@@ -7,6 +7,10 @@ from src.users.infra import orm
 
 class AbstractUserRepository(abc.ABC):
     @abc.abstractmethod
+    def exists(self, name: str) -> bool:
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def add(self, user: models.User):
         raise NotImplementedError
 
@@ -19,10 +23,12 @@ class SqlUserRepository(AbstractUserRepository):
     def __init__(self, session):
         self.session = session
 
+    def exists(self, name: str) -> bool:
+        q = self.session.query(orm.User).filter(orm.User.name == name)
+        return self.session.query(q.exists()).scalar()
+
     def add(self, user: models.User):
-        q = self.session.query(orm.User)\
-            .filter(orm.User.user_id == user.user_id or orm.User.name == user.name)
-        if self.session.query(q.exists()).scalar():
+        if self.exists(user.name):
             raise DuplicatedUserException(f"user {user.name} already exists")
         user_orm = orm.User(**user.dict())
         self.session.add(user_orm)
