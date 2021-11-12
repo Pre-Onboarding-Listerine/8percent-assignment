@@ -2,6 +2,7 @@ from jose import jwt
 
 from src.configs.security import SECRET_KEY, ALGORITHM
 from src.security.dto import LoginInfo, AccessToken
+from src.security.exception import IncorrectPasswordException
 from src.users.application.unit_of_work import AbstractUserUnitOfWork
 
 
@@ -23,6 +24,8 @@ class AuthenticationService:
             user = self.uow.users.get_by_name(info.name)
             if user.password == info.password:
                 return self.__publish_access_token(user.user_id)
+            else:
+                raise IncorrectPasswordException("incorrect password")
 
 
 def authenticate_token():

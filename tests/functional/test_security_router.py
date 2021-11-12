@@ -38,3 +38,15 @@ class TestSecurityRouter(unittest.TestCase):
 
         assert_that(response.status_code).is_equal_to(status.HTTP_200_OK)
         assert_that(response.json()).contains_key("access_token")
+
+    def test_login_with_incorrect_password(self):
+        data = {
+            "name": "asd",
+            "password": "zxc"
+        }
+        response = self.client.post(
+            "/api/auth/login",
+            json=data
+        )
+
+        assert_that(response.status_code).is_equal_to(status.HTTP_401_UNAUTHORIZED)

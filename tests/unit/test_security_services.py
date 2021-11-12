@@ -4,7 +4,9 @@ from jose import jwt
 
 from src.configs.security import SECRET_KEY, ALGORITHM
 from src.security.dto import LoginInfo
+from src.security.exception import IncorrectPasswordException
 from src.users.domain import models
+from src.users.exceptions import UserNotFoundException
 
 
 @pytest.fixture
@@ -27,3 +29,29 @@ def test_authenticate_with_valid_info(valid_login_info, authentication_service):
     )
 
     assert_that(access_token.access_token).is_equal_to(expected)
+
+
+def test_authenticate_with_not_exist_user(authentication_service):
+    not_exist_user_info = LoginInfo(
+        name="asd",
+        password="123qwe"
+    )
+    assert_that(authentication_service.authenticate)\
+        .raises(UserNotFoundException)\
+        .when_called_with(not_exist_user_info)
+
+
+def test_authenticate_with_incorrect_password(valid_login_info, authentication_service):
+    user_uow = authentication_service.uow
+    user = models.User(user_id="user-1", **valid_login_info.dict())
+    with user_uow:
+        user_uow.users.add(user)
+        user_uow.commit()
+
+    incorrect_login_info = LoginInfo(
+        name=valid_login_info.name,
+        password="zxc"
+    )
+    assert_that(authentication_service.authenticate) \
+        .raises(IncorrectPasswordException) \
+        .when_called_with(incorrect_login_info)
