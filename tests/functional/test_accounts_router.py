@@ -244,6 +244,6 @@ class TestAccountsRouter(unittest.TestCase):
         )
         assert_that(response_history.status_code).is_equal_to(status.HTTP_200_OK)
         items = response_history.json()["items"]
-        assert_that(len(items)).is_equal_to(20)
+        assert_that(len(items)).is_equal_to(10)
 
 
