@@ -1,8 +1,10 @@
+from datetime import datetime
+
 from assertpy import assert_that
 
 from src.accounts.application.unit_of_work import SqlAccountUnitOfWork
 from src.accounts.domain import models
-from src.accounts.domain.models import Balance
+from src.accounts.domain.models import Balance, TransactionEvent
 from src.accounts.exceptions import AccountNotFoundException, DuplicatedAccountException
 
 
@@ -127,3 +129,58 @@ def test_get_account_list_without_accounts(session_factory):
     with uow:
         accounts = uow.accounts.list(owner_id=owner_id)
         assert_that(accounts).is_equal_to([])
+
+
+def insert_transaction_events(session):
+    session.execute(
+        "INSERT INTO transaction_events "
+        "(account_number, transaction_datatime, transaction_amount, balance, transaction_type, memo) VALUES "
+        f"('123-123-123123', '{datetime(2021, 10, 11, 9, 19, 32)}', '3000', '12000', 'withdraw', 'sadf'),"
+        f"('123-123-123123', '{datetime(2021, 10, 12, 9, 19, 32)}', '5000', '7000', 'withdraw', 'sadf'),"
+        f"('123-123-456456', '{datetime(2021, 10, 16, 9, 19, 32)}', '30000', '40000', 'deposit', 'sadf'),"
+        f"('123-123-123123', '{datetime(2021, 10, 23, 9, 19, 32)}', '3000', '10000', 'deposit', 'sadf'),"
+        f"('123-123-123123', '{datetime(2021, 11, 11, 9, 19, 32)}', '3000', '13000', 'withdraw', 'sadf'),"
+        f"('123-123-456456', '{datetime(2021, 11, 11, 9, 19, 32)}', '3000', '37000', 'withdraw', 'sadf'),"
+        f"('123-123-123123', '{datetime(2021, 12, 11, 9, 19, 32)}', '3000', '16000', 'deposit', 'sadf'),"
+        f"('123-123-456456', '{datetime(2021, 12, 15, 9, 19, 32)}', '3000', '34000', 'withdraw', 'sadf'),"
+        f"('123-123-123123', '{datetime(2021, 12, 16, 9, 19, 32)}', '3000', '13000', 'withdraw', 'sadf'),"
+        f"('123-123-123123', '{datetime(2021, 12, 17, 9, 19, 32)}', '3000', '10000', 'withdraw', 'sadf')"
+    )
+
+
+def test_list_transactions_with_transactions(session_factory):
+    session = session_factory()
+    insert_transaction_events(session)
+    session.commit()
+
+    uow = SqlAccountUnitOfWork(session_factory)
+    account_number = "123-123-123123"
+    with uow:
+        transactions = uow.transaction_events.list_by_account_number(account_number)
+        assert_that(len(transactions)).is_equal_to(7)
+
+
+def test_list_transactions_with_not_exist_account_number(session_factory):
+    uow = SqlAccountUnitOfWork(session_factory)
+    account_number = "123-123-123123"
+    with uow:
+        transactions = uow.transaction_events.list_by_account_number(account_number)
+        assert_that(transactions).is_equal_to([])
+
+
+def test_add_transaction_with_transaction_event(session_factory):
+    transaction_event = TransactionEvent(
+        account_number="123-123-123123",
+        transaction_datatime=datetime(2021, 10, 16, 9, 19, 32),
+        transaction_amount=30000,
+        balance=40000,
+        transaction_type="deposit",
+        memo="asdfasdfaf"
+    )
+    uow = SqlAccountUnitOfWork(session_factory)
+    with uow:
+        uow.transaction_events.add(transaction_event)
+        transaction_events = uow.transaction_events.list_by_account_number(transaction_event.account_number)
+        assert_that(transaction_events[0].memo).is_equal_to(transaction_event.memo)
+
+

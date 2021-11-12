@@ -1,4 +1,6 @@
-from pydantic import BaseModel, validator
+from typing import Optional
+
+from pydantic import BaseModel, validator, Field
 
 from src.security.exception import EmptyPropertyException
 
@@ -26,3 +28,9 @@ class AccountNumber(BaseModel):
         if not v:
             raise EmptyPropertyException("account number is required")
         return v
+
+
+class TransactionInfo(BaseModel):
+    amount: int = Field(gt=0)
+    transaction_type: str
+    memo: Optional[str]

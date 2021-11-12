@@ -26,7 +26,7 @@ class AbstractAccountRepository(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def update(self, account: models.Account):
+    def update_balance(self, account: models.Account):
         raise NotImplementedError
 
 
@@ -59,5 +59,31 @@ class SqlAccountRepository(AbstractAccountRepository):
         accounts = self.session.query(orm.Account).filter(orm.Account.owner_id == owner_id).all()
         return parse_obj_as(List[models.Account], accounts)
 
-    def update(self, account: models.Account):
-        pass
+    def update_balance(self, account: models.Account):
+        account_orm = self.session.query(orm.Account)\
+            .filter(orm.Account.account_number == account.account_number).first()
+        account_orm.balance_amount = account.balance.amount
+
+
+class AbstractTransactionRepository(abc.ABC):
+    @abc.abstractmethod
+    def add(self, transaction: models.TransactionEvent):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def list_by_account_number(self, account_number: str) -> List[models.TransactionEvent]:
+        raise NotImplementedError
+
+
+class SqlTransactionRepository(AbstractTransactionRepository):
+    def __init__(self, session):
+        self.session = session
+
+    def add(self, transaction_event: models.TransactionEvent):
+        transaction_event_orm = orm.TransactionEvent(**transaction_event.dict())
+        self.session.add(transaction_event_orm)
+
+    def list_by_account_number(self, account_number: str) -> List[models.TransactionEvent]:
+        transaction_history = self.session.query(orm.TransactionEvent) \
+            .filter(orm.TransactionEvent.account_number == account_number).all()
+        return parse_obj_as(List[models.TransactionEvent], transaction_history)

@@ -4,9 +4,10 @@ import pytest
 
 from src.accounts.application.services import AccountService
 from src.accounts.application.unit_of_work import AbstractAccountUnitOfWork
+from src.accounts.domain import models
 from src.accounts.domain.models import Account
 from src.accounts.exceptions import AccountNotFoundException
-from src.accounts.infra.repository import AbstractAccountRepository
+from src.accounts.infra.repository import AbstractAccountRepository, AbstractTransactionRepository
 from src.security.application.services import AuthenticationService
 from src.users.application.unit_of_work import AbstractUserUnitOfWork
 from src.users.application.services import UserService
@@ -93,13 +94,25 @@ class FakeAccountRepository(AbstractAccountRepository):
     def list(self, owner_id: str) -> List[Account]:
         return list(filter(lambda account: account.owner_id == owner_id, self._accounts.values()))
 
-    def update(self, account: Account):
-        pass
+    def update_balance(self, account: Account):
+        self._accounts[account.account_number] = account
+
+
+class FakeTransactionRepository(AbstractTransactionRepository):
+    def __init__(self, transaction_events):
+        self._transaction_events = transaction_events
+
+    def add(self, transaction: models.TransactionEvent):
+        self._transaction_events.append(transaction)
+
+    def list_by_account_number(self, account_number: str) -> List[models.TransactionEvent]:
+        return list(filter(lambda event: event.account_number == account_number, self._transaction_events))
 
 
 class FakeAccountUnitOfWork(AbstractAccountUnitOfWork):
     def __init__(self):
         self.accounts = FakeAccountRepository(dict())
+        self.transaction_events = FakeTransactionRepository(list())
         self.committed = False
 
     def commit(self):
