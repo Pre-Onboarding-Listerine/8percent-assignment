@@ -1,8 +1,8 @@
-from jose import jwt
+from jose import jwt, JWTError
 
 from src.configs.security import SECRET_KEY, ALGORITHM
 from src.security.dto import LoginInfo, AccessToken
-from src.security.exception import IncorrectPasswordException
+from src.security.exception import IncorrectPasswordException, EmptyAccessTokenException, InvalidAccessTokenException
 from src.users.application.unit_of_work import AbstractUserUnitOfWork
 
 
@@ -28,5 +28,12 @@ class AuthenticationService:
                 raise IncorrectPasswordException("incorrect password")
 
 
-def authenticate_token():
-    pass
+def authenticate_token(token: str) -> str:
+    if not token:
+        raise EmptyAccessTokenException("access token is required")
+    token = token[len("Bearer "):]
+    try:
+        claims = jwt.decode(token=token, key=SECRET_KEY, algorithms=[ALGORITHM])
+        return claims["user_id"]
+    except JWTError:
+        raise InvalidAccessTokenException("access token is invalid")
