@@ -89,78 +89,38 @@
 
 | 이름 | 역할 | GITHUB | BLOG |
 | :---: | :---: | :---: | :---: |
-| `김주완` |  | [joowankim](https://github.com/joowankim) | https://make-easy-anything.tistory.com |
-| `박은혜` |  | [eunhye43](https://github.com/eunhye43) | https://velog.io/@majaeh43 |
-| `윤수진` |  | [study-by-myself](https://github.com/study-by-myself)| https://pro-yomi.tistory.com |
-| `주종민` |  | [Gouache-studio](https://github.com/Gouache-studio) | https://gouache-studio.tistory.com/ |
+| `김주완` | 개발 및 배포환경 설정, API 설계 및 구현 | [joowankim](https://github.com/joowankim) | https://make-easy-anything.tistory.com |
+| `박은혜` | 애플리케이션 배포, 기능 구현 | [eunhye43](https://github.com/eunhye43) | https://velog.io/@majaeh43 |
+| `윤수진` | API 구현 | [study-by-myself](https://github.com/study-by-myself)| https://pro-yomi.tistory.com |
+| `주종민` | 모델 설계 및 구현 | [Gouache-studio](https://github.com/Gouache-studio) | https://gouache-studio.tistory.com/ |
 
-## 구현 기능
+## 구현 내용
 
-### 거래내역 조회 API
+8퍼센트의 과제로 구현된 엔드포인트는 다음과 같습니다.
 
-- <간단설명>
+- `POST /api/users`: 회원가입을 할 수 있습니다.
+- `POST /api/auth/login`: 로그인(인증 토큰 발급)을 할 수 있습니다.
+- `POST /api/accounts`: 입출금을 위한 계좌 생성을 할 수 있습니다.
+- `GET /api/accounts`: 인증 토큰을 이용해 자신의 계좌 리스트를 검색할 수 있습니다.
+- `GET /api/accounts/<account-number>`: 계좌 리스트를 불러와 자신의 계좌번호를 알았다면 그 계좌번호를 이용해 자신의 특정 계좌를 조회할 수 있습니다.
+- `PUT /api/accounts/<account-number>`: 특정 계좌에 대한 입/출금을 수행할 수 있습니다.
+- `GET /api/accounts/<account-number>/transactions`: 특정 계좌에 대한 거래내역을 조회할 수 있습니다.
 
-**구현 내용**
+### 이 중에서 과제에서 구현하도록 언급된 엔드포인트는 다음과 같습니다.
 
--
--
--
+- `PUT /api/accounts/<account-number>`: 입/출금
+- `GET /api/accounts/<account-number>/transactions`: 거래 내역 조회
 
-**요청 예시**
+구현된 엔드포인트에 대한 테스트는 다음 포스트맨 문서에서 수행하실 수 있습니다.
 
-```
+포스트맨 문서 주소: https://documenter.getpostman.com/view/15905881/UVC8CRFb
 
-```
+### Unit test와 Functional test
 
-  **응답 예시**
+테스트는 `/tests` 디렉토리에서 확인하실 수 있습니다. 그리고 루트 디렉토리에서 다음 명령어로 테스트를 실행할 수 있습니다.
 
-```
-
-```
-
-
-### 입금 API
-
-- <간단설명>
-
-**구현 내용**
-
--
--
--
-
-**요청 예시**
-
-```
-
-```
-
-  **응답 예시**
-
-```
-
-```
-
-### 출금 API
-
-- <간단설명>
-
-**구현 내용**
-
--
--
--
-
-**요청 예시**
-
-```
-
-```
-
-  **응답 예시**
-
-```
-
+```commandline
+$ pytest
 ```
 
 ## 8️⃣ 모델 관계
@@ -171,9 +131,27 @@
 
 ### 존재하는 모델
 
-- `User`: 회사의 이름 문자열과 표현된 언어를 속성으로 가지는 모델
-- `Account`: 회사에 대한 메타정보를 속성으로 가지는 모델
-- `TransactionEvent`: `Company`와 `Tag` 테이블 사이의 관계 테이블
+- `User`: 계좌를 소유할 수 있는 애플리케이션 사용자
+- `Account`: 계좌의 잔액을 관리합니다.
+- `TransactionEvent`: 계좌 잔액을 관리하면서 생성된 이벤트를 의미합니다.
+
+## 애플리케이션 구조
+
+저희팀은 해당 애플리케이션에서 다른 컨텍스트를 가지는 영역이 총 3가지 정도 있다고 판단했습니다.
+그래서 애플리케이션의 내부를 `security`, `accounts`, `users` 모듈로 분류했습니다.
+여기서 각 모듈은 다음과 같은 분류의 요청들을 처리합니다.
+
+- `security`: 인증 및 인가에 대한 요청을 처리합니다.
+- `accounts`: 계좌를 조작하는 요청을 처리합니다.
+- `users`: 계정을 조작하는 요청을 처리합니다.
+
+그 다음에는 각 영역에 도착할 요청들이 각 책임별로 나뉘어진 각 계층을 이동하면서 처리될 수 있도록 구현하고자 했습니다.
+그래서 각 모듈에 `routers`, `application`, `domain`, `infra` 계층을 두어 각 계층의 책임을 분류했습니다.
+
+- `routers`: 들어온 요청을 검증하고 전달받은 데이터를 정제해 애플리케이션 계층 컴포넌트에 전달합니다.
+- `application`: 도메인 계층에서 요청을 처리할 수 있는 객체를 찾아 메시지를 넘기며 이 계층의 작업단위(Unit of Work) 컴포넌트를 이용해 트랜잭션을 관리합니다.
+- `domain`: 도메인의 모델들이 위치하며 도메인의 규칙으로 전달받은 요청을 처리합니다.
+- `infra`: 처리된 요청의 결과를 영속적으로 보존할 수 있도록 데이터베이스와 같은 세부사항과 직접적으로 소통합니다.
 
 ## 8️⃣ 실행환경 설절 방법
 
@@ -182,12 +160,10 @@
 1. 레포지토리 git 클론
 
     ```bash
-    $ git clone https://github.com/Pre-Onboarding-Listerine/wanted-lab-assignment.git
+    $ git clone https://github.com/Pre-Onboarding-Listerine/8percent-assignment.git
     ```
 
-2. `my_settings.py` 프로젝트 루트 디렉토리에 위치시키기
-
-3. 애플리케이션 실행하기
+2. 애플리케이션 실행하기
 
     ```bash
     $ docker-compose up
@@ -199,29 +175,20 @@
     $ docker-compose exec api
     ```
 
-4. 애플리케이션에 접근하기
+3. 애플리케이션에 접근하기
 
-    django의 디폴트 포트인 8000포트가 아닌 8002번 포트와 연결되어 있습니다. 따라서 아래 주소로 로컬에 실행한 애플리케이션에 접근하실 수 있습니다.
     ```
-    http://localhost:8002
+    http://localhost:8080
     ```
 
 ## 8️⃣ 과제 결과물 테스트 및 확인 방법
 
-[`test_app.py` 연동 설정 PR]()
+1. POSTMAN 확인: https://documenter.getpostman.com/view/15905881/UVC8CRFb
 
-1. `test_app.py` 실행시키기
-    
-    ```
-    $ pytest
-    ```
-   
-2. POSTMAN 확인: 
-
-3. 배포된 서버의 주소
+2. 배포된 서버의 주소
 
     ```commandline
-
+    http://15.164.145.89:8080
     ```
 
 # 8️⃣ Reference
