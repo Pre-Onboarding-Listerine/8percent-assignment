@@ -8,3 +8,11 @@ def empty_property_exception_handler(request, exc):
 
 def incorrect_password_exception_handler(request, exc):
     return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"message": str(exc)})
+
+
+def empty_access_token_exception_handler(request, exc):
+    return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"message": str(exc)})
+
+
+def invalid_access_token_exception_handler(request, exc):
+    return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"message": str(exc)})

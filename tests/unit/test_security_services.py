@@ -3,8 +3,9 @@ from assertpy import assert_that
 from jose import jwt
 
 from src.configs.security import SECRET_KEY, ALGORITHM
+from src.security.application.services import authenticate_token
 from src.security.dto import LoginInfo
-from src.security.exception import IncorrectPasswordException
+from src.security.exception import IncorrectPasswordException, EmptyAccessTokenException, InvalidAccessTokenException
 from src.users.domain import models
 from src.users.exceptions import UserNotFoundException
 
@@ -55,3 +56,28 @@ def test_authenticate_with_incorrect_password(valid_login_info, authentication_s
     assert_that(authentication_service.authenticate) \
         .raises(IncorrectPasswordException) \
         .when_called_with(incorrect_login_info)
+
+
+def test_authenticate_token_with_valid_token():
+    valid_token = "Bearer " + jwt.encode(
+        claims={"user_id": "user-1"},
+        key=SECRET_KEY,
+        algorithm=ALGORITHM
+    )
+    actual = authenticate_token(valid_token)
+    expected = "user-1"
+    assert_that(actual).is_equal_to(expected)
+
+
+def test_authenticate_token_with_empty_string_token():
+    empty_string_token = ""
+    assert_that(authenticate_token)\
+        .raises(EmptyAccessTokenException)\
+        .when_called_with(empty_string_token)
+
+
+def test_authenticate_token_with_invalid_token():
+    invalid_token = "Bearer asdasfasdfasf"
+    assert_that(authenticate_token)\
+        .raises(InvalidAccessTokenException)\
+        .when_called_with(invalid_token)
