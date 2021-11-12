@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 from src.accounts.exceptions import LackOfBalanceException
@@ -50,3 +53,15 @@ class Account(BaseModel):
 
     def withdraw(self, amount: Balance):
         self.balance -= amount
+
+
+class TransactionEvent(BaseModel):
+    account_number: str
+    transaction_datatime: datetime
+    transaction_amount: int
+    balance: int
+    transaction_type: str
+    memo: Optional[str] = ""
+
+    class Config:
+        orm_mode = True

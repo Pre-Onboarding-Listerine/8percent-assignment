@@ -6,6 +6,7 @@ from src.accounts.infra import repository
 
 class AbstractAccountUnitOfWork(abc.ABC):
     accounts: repository.AbstractAccountRepository
+    transaction_events: repository.AbstractTransactionRepository
 
     def __enter__(self) -> AbstractAccountUnitOfWork:
         return self
@@ -29,6 +30,7 @@ class SqlAccountUnitOfWork(AbstractAccountUnitOfWork):
     def __enter__(self):
         self.session = self.session_factory()
         self.accounts = repository.SqlAccountRepository(self.session)
+        self.transaction_events = repository.SqlTransactionRepository(self.session)
         return super().__enter__()
 
     def __exit__(self, *args):

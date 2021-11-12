@@ -29,7 +29,7 @@ class TestAccountsRouter(unittest.TestCase):
         Base.metadata.drop_all(bind=self.engine)
 
     def test_retrieve_account_with_valid_password(self):
-        data = {"value": "123qwe123"}
+        data = {"value": "account-password"}
         headers = {"Authorization": self.access_token}
         response = self.client.post(
             "/api/accounts",
@@ -68,3 +68,87 @@ class TestAccountsRouter(unittest.TestCase):
         )
         assert_that(response.status_code).is_equal_to(status.HTTP_200_OK)
         assert_that(response.json()).is_equal_to([])
+
+    def test_withdraw_from_sufficient_balance(self):
+        headers = {"authorization": self.access_token}
+        data = {"value": "account-password"}
+        response = self.client.post(
+            "/api/accounts",
+            json=data,
+            headers=headers
+        )
+        assert_that(response.status_code).is_equal_to(status.HTTP_201_CREATED)
+
+        response_list = self.client.get(
+            "/api/accounts",
+            headers=headers
+        )
+        account_info = response_list.json()[0]
+
+        transaction_data = {
+            "amount": 3000,
+            "transaction_type": "deposit",
+            "memo": ""
+        }
+
+        response_deposit = self.client.put(
+            "/api/accounts/" + account_info["account_number"],
+            json=transaction_data,
+            headers=headers
+        )
+        assert_that(response_deposit.status_code).is_equal_to(status.HTTP_200_OK)
+
+        transaction_data = {
+            "amount": 2000,
+            "transaction_type": "withdraw",
+            "memo": ""
+        }
+
+        response_withdraw = self.client.put(
+            "/api/accounts/" + account_info["account_number"],
+            json=transaction_data,
+            headers=headers
+        )
+        assert_that(response_withdraw.status_code).is_equal_to(status.HTTP_200_OK)
+
+    def test_withdraw_from_insufficient_balance(self):
+        headers = {"authorization": self.access_token}
+        data = {"value": "account-password"}
+        response = self.client.post(
+            "/api/accounts",
+            json=data,
+            headers=headers
+        )
+        assert_that(response.status_code).is_equal_to(status.HTTP_201_CREATED)
+
+        response_list = self.client.get(
+            "/api/accounts",
+            headers=headers
+        )
+        account_info = response_list.json()[0]
+
+        transaction_data = {
+            "amount": 3000,
+            "transaction_type": "deposit",
+            "memo": ""
+        }
+
+        response_deposit = self.client.put(
+            "/api/accounts/" + account_info["account_number"],
+            json=transaction_data,
+            headers=headers
+        )
+        assert_that(response_deposit.status_code).is_equal_to(status.HTTP_200_OK)
+
+        transaction_data = {
+            "amount": 5000,
+            "transaction_type": "withdraw",
+            "memo": ""
+        }
+
+        response_withdraw = self.client.put(
+            "/api/accounts/" + account_info["account_number"],
+            json=transaction_data,
+            headers=headers
+        )
+        assert_that(response_withdraw.status_code).is_equal_to(status.HTTP_400_BAD_REQUEST)

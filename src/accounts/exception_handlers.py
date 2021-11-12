@@ -12,3 +12,11 @@ def account_not_found_exception_handler(request, exc):
 
 def duplicated_account_exception_handler(request, exc):
     return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"message": str(exc)})
+
+
+def invalid_transaction_type_exception_handler(request, exc):
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"message": str(exc)})
+
+
+def invalid_access_exception_handler(request, exc):
+    return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"message": str(exc)})

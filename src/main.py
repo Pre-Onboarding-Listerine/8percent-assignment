@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 
 from src.accounts.exception_handlers import lack_of_balance_exception_handler, account_not_found_exception_handler, \
-    duplicated_account_exception_handler
-from src.accounts.exceptions import LackOfBalanceException, AccountNotFoundException, DuplicatedAccountException
+    duplicated_account_exception_handler, invalid_transaction_type_exception_handler, invalid_access_exception_handler
+from src.accounts.exceptions import LackOfBalanceException, AccountNotFoundException, DuplicatedAccountException, \
+    InvalidTransactionTypeException, InvalidAccessException
 from src.security.exception import EmptyPropertyException, IncorrectPasswordException, EmptyAccessTokenException, \
     InvalidAccessTokenException
 from src.security.exception_handlers import empty_property_exception_handler, incorrect_password_exception_handler, \
@@ -33,3 +34,5 @@ app.add_exception_handler(InvalidAccessTokenException, invalid_access_token_exce
 app.add_exception_handler(LackOfBalanceException, lack_of_balance_exception_handler)
 app.add_exception_handler(AccountNotFoundException, account_not_found_exception_handler)
 app.add_exception_handler(DuplicatedAccountException, duplicated_account_exception_handler)
+app.add_exception_handler(InvalidTransactionTypeException, invalid_transaction_type_exception_handler)
+app.add_exception_handler(InvalidAccessException, invalid_access_exception_handler)
