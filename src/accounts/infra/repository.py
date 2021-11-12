@@ -1,9 +1,12 @@
 import abc
 from typing import List
 
+from fastapi_pagination.ext.sqlalchemy import paginate
 from pydantic import parse_obj_as
+from sqlalchemy.orm import Query
 
 from src.accounts.domain import models
+from src.accounts.dto import HistoryParams
 from src.accounts.exceptions import AccountNotFoundException, DuplicatedAccountException
 from src.accounts.infra import orm
 
@@ -74,6 +77,10 @@ class AbstractTransactionRepository(abc.ABC):
     def list_by_account_number(self, account_number: str) -> List[models.TransactionEvent]:
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def history_by_account_number(self, account_number: str, params: HistoryParams):
+        raise NotImplementedError
+
 
 class SqlTransactionRepository(AbstractTransactionRepository):
     def __init__(self, session):
@@ -87,3 +94,13 @@ class SqlTransactionRepository(AbstractTransactionRepository):
         transaction_history = self.session.query(orm.TransactionEvent) \
             .filter(orm.TransactionEvent.account_number == account_number).all()
         return parse_obj_as(List[models.TransactionEvent], transaction_history)
+
+    def history_by_account_number(self, account_number: str, params: HistoryParams):
+        query = self.session.query(orm.TransactionEvent).filter(orm.TransactionEvent.account_number == account_number)
+        if params.start:
+            query = query.filter(orm.TransactionEvent.transaction_datatime >= params.start)
+        if params.end:
+            query = query.filter(orm.TransactionEvent.transaction_datatime < params.end)
+        if params.transaction_type:
+            query = query.filter(orm.TransactionEvent.transaction_type == params.transaction_type)
+        return paginate(query)
