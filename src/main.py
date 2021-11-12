@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi_pagination import add_pagination
 
 from src.accounts.exception_handlers import lack_of_balance_exception_handler, account_not_found_exception_handler, \
     duplicated_account_exception_handler, invalid_transaction_type_exception_handler, invalid_access_exception_handler
@@ -23,6 +24,7 @@ app.include_router(user_router)
 app.include_router(security_router)
 app.include_router(account_router)
 
+add_pagination(app)
 
 app.add_exception_handler(EmptyNameException, empty_name_exception_handler)
 app.add_exception_handler(UserNotFoundException, user_not_found_exception_handler)

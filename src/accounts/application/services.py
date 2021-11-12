@@ -2,8 +2,8 @@ from datetime import datetime
 
 from src.accounts.application.unit_of_work import AbstractAccountUnitOfWork
 from src.accounts.domain.models import Account, Balance, TransactionEvent
-from src.accounts.dto import CreateAccountInfo, TransactionInfo
-from src.accounts.exceptions import InvalidTransactionTypeException, InvalidAccessException
+from src.accounts.dto import CreateAccountInfo, TransactionInfo, HistoryParams
+from src.accounts.exceptions import InvalidTransactionTypeException, InvalidAccessException, AccountNotFoundException
 from src.utils.id_generator import IdGenerator
 
 
@@ -61,3 +61,18 @@ class AccountService:
                 self.__publish_transaction_event(account, transaction_info)
             )
             self.uow.commit()
+
+    def get_transaction_history(self, account_number: str, user_id: str, params: HistoryParams):
+        with self.uow:
+            account = self.uow.accounts.get_by_account_number(account_number)
+            if account:
+                if account.owner_id == user_id:
+                    history = self.uow.transaction_events.history_by_account_number(account_number, params)
+                    return history
+                else:
+                    raise InvalidAccessException(
+                        "only the owner of an account can access the transaction history of the account"
+                    )
+            else:
+                raise AccountNotFoundException(f"account {account_number} is not found")
+

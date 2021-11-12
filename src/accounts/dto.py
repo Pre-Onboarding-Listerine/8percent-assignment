@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, validator, Field
@@ -34,3 +35,11 @@ class TransactionInfo(BaseModel):
     amount: int = Field(gt=0)
     transaction_type: str
     memo: Optional[str]
+
+
+class HistoryParams(BaseModel):
+    start: Optional[datetime]
+    end: Optional[datetime]
+    transaction_type: Optional[str]
+
+

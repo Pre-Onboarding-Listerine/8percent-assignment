@@ -1,6 +1,7 @@
 from typing import List
 
 import pytest
+from sqlalchemy.orm import Query
 
 from src.accounts.application.services import AccountService
 from src.accounts.application.unit_of_work import AbstractAccountUnitOfWork
@@ -102,11 +103,14 @@ class FakeTransactionRepository(AbstractTransactionRepository):
     def __init__(self, transaction_events):
         self._transaction_events = transaction_events
 
+    def list_by_account_number(self, account_number: str) -> List[models.TransactionEvent]:
+        return list(filter(lambda event: event.account_number == account_number, self._transaction_events))
+
     def add(self, transaction: models.TransactionEvent):
         self._transaction_events.append(transaction)
 
-    def list_by_account_number(self, account_number: str) -> List[models.TransactionEvent]:
-        return list(filter(lambda event: event.account_number == account_number, self._transaction_events))
+    def history_by_account_number(self, account_number: str) -> Query:
+        pass
 
 
 class FakeAccountUnitOfWork(AbstractAccountUnitOfWork):

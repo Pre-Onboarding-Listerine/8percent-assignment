@@ -4,7 +4,7 @@ from assertpy import assert_that
 
 from src.accounts.application.unit_of_work import SqlAccountUnitOfWork
 from src.accounts.domain import models
-from src.accounts.domain.models import Balance, TransactionEvent
+from src.accounts.domain.models import Balance, TransactionEvent, Account
 from src.accounts.exceptions import AccountNotFoundException, DuplicatedAccountException
 
 

@@ -1,7 +1,7 @@
 import datetime
 
 from sqlalchemy import Column, String, ForeignKey, Integer, DateTime
-from sqlalchemy.orm import composite
+from sqlalchemy.orm import composite, relationship
 
 from src.accounts.domain.models import Balance
 from src.configs.database import Base
@@ -28,3 +28,5 @@ class TransactionEvent(Base):
     balance = Column(Integer)
     transaction_type = Column(String)
     memo = Column(String)
+
+    account = relationship('Account')
